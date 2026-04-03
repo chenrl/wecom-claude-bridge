@@ -44,6 +44,7 @@ export class ResponseSender {
   async sendFinal(stats?: { cost: number; inputTokens: number; outputTokens: number }): Promise<void> {
     // Flush remaining buffer
     if (this.buffer.length > 0) {
+      console.info(`[INFO] 回复完成 (${this.buffer.length} 字符): ${this.buffer.slice(0, 500)}`)
       await this.flushChunk(true)
     } else {
       // Send empty finish if nothing buffered
@@ -67,6 +68,7 @@ export class ResponseSender {
 
   async sendError(error: string): Promise<void> {
     this.buffer = ''
+    console.info(`[INFO] 回复错误: ${error}`)
     await this.ws.replyStream(
       this.frame,
       this.streamId,
@@ -76,6 +78,7 @@ export class ResponseSender {
   }
 
   async sendText(text: string): Promise<void> {
+    console.info(`[INFO] 回复消息: ${text.slice(0, 500)}`)
     await this.ws.replyStream(this.frame, this.streamId, text, true)
   }
 

@@ -119,9 +119,9 @@ export class Bridge {
     const chatId = body.chattype === 'group' ? (body.chatid ?? body.from.userid) : body.from.userid
     const userId = body.from.userid
 
-    console.log(`[Bridge] New message: ${body.msgtype} from ${userId} (${body.chattype})`)
+    // Log incoming message
+    console.info(`[INFO] 收到消息 (${userId}, ${body.chattype}): [${body.msgtype}] ${this.extractMessageSummary(body)}`)
 
-    // Check for slash commands in text messages
     if (body.msgtype === 'text') {
       const textBody = body as unknown as TextMessage
       const textContent = textBody.text?.content ?? ''
@@ -264,6 +264,25 @@ export class Bridge {
       case 'help':
         await sender.sendText(getHelpText())
         break
+    }
+  }
+
+  private extractMessageSummary(body: BaseMessage): string {
+    switch (body.msgtype) {
+      case 'text': {
+        const textBody = body as unknown as TextMessage
+        return textBody.text?.content ?? ''
+      }
+      case 'image':
+        return '[图片]'
+      case 'file':
+        return '[文件]'
+      case 'voice':
+        return '[语音]'
+      case 'video':
+        return '[视频]'
+      default:
+        return `[${body.msgtype}]`
     }
   }
 }
