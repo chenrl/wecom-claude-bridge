@@ -1,0 +1,19 @@
+{
+  "project": {
+    "cwd": "D:/Project/gitlab/k-system",
+    "model": "GLM-5.1",
+    "allowedTools": ["Read", "Edit", "Write", "Bash", "Glob", "Grep"]
+  },
+  "wecom": {
+    "botId": "aibl1TOUWhBZ7oRLUcv6JrvLLpgQWhafhyl",
+    "secret": "Bbk5eUh8U8Om3RWkM6q1VIIjScMyXUkh5ZEXXknK6fH",
+    "sessionTimeoutMin": 30
+  },
+  "claude": {
+    "maxTurns": 50,
+    "maxBudgetUsd": 5.0
+  },
+  "bridge": {
+    "showStats": false
+  }
+}
