@@ -1,5 +1,6 @@
 import type { WSClient, WsFrameHeaders } from '@wecom/aibot-node-sdk'
 import { generateReqId } from '@wecom/aibot-node-sdk'
+import { log } from './logger.js'
 
 // SDK limit is 20480 bytes per stream frame; use 19000 to leave margin
 const MAX_STREAM_BYTES = 19000
@@ -26,7 +27,7 @@ export class ResponseSender {
     // If buffer exceeds chunk limit, flush current stream and start a new one
     if (Buffer.byteLength(this.buffer, 'utf-8') > MAX_STREAM_BYTES) {
       this.flushChunk(false).catch((error) => {
-        console.error('[ResponseSender] Flush chunk failed:', error)
+        log.error('[ResponseSender] Flush chunk failed:', error)
       })
     } else {
       // Non-blocking intermediate update
@@ -36,7 +37,7 @@ export class ResponseSender {
         this.buffer,
         false,
       ).catch((error) => {
-        console.error('[ResponseSender] Stream update failed:', error)
+        log.error('[ResponseSender] Stream update failed:', error)
       })
     }
   }
@@ -44,7 +45,7 @@ export class ResponseSender {
   async sendFinal(stats?: { cost: number; inputTokens: number; outputTokens: number }): Promise<void> {
     // Flush remaining buffer
     if (this.buffer.length > 0) {
-      console.info(`[INFO] 回复完成 (${this.buffer.length} 字符): ${this.buffer.slice(0, 500)}`)
+      log.info(`回复完成 (${this.buffer.length} 字符): ${this.buffer.slice(0, 500)}`)
       await this.flushChunk(true)
     } else {
       // Send empty finish if nothing buffered
@@ -68,7 +69,7 @@ export class ResponseSender {
 
   async sendError(error: string): Promise<void> {
     this.buffer = ''
-    console.info(`[INFO] 回复错误: ${error}`)
+    log.info(`回复错误: ${error}`)
     await this.ws.replyStream(
       this.frame,
       this.streamId,
@@ -78,7 +79,7 @@ export class ResponseSender {
   }
 
   async sendText(text: string): Promise<void> {
-    console.info(`[INFO] 回复消息: ${text.slice(0, 500)}`)
+    log.info(`回复消息: ${text.slice(0, 500)}`)
     await this.ws.replyStream(this.frame, this.streamId, text, true)
   }
 

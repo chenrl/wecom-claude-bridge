@@ -25,6 +25,7 @@ export interface ClaudeConfig {
 
 export interface BridgeServerConfig {
   showStats?: boolean
+  logLevel?: 'debug' | 'info' | 'warn' | 'error' | 'silent'
 }
 
 // ===== 会话映射 =====

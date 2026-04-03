@@ -2,6 +2,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { SessionMapping, WecomConfig } from './types.js'
+import { log } from './logger.js'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const DATA_DIR = join(__dirname, '..', 'data')
@@ -36,7 +37,7 @@ export class SessionManager {
       let dirty = false
       for (const m of data) {
         if (m.isProcessing) {
-          console.log(`[Session] Fixing stale isProcessing for ${m.chatId}`)
+          log.info(`[Session] Fixing stale isProcessing for ${m.chatId}`)
           m.isProcessing = false
           dirty = true
         }
@@ -141,7 +142,7 @@ export class SessionManager {
       }
       if (dirty) {
         this.save().catch((err) =>
-          console.error('[Session] Cleanup save failed:', err)
+          log.error('[Session] Cleanup save failed:', err)
         )
       }
     }, 60_000)

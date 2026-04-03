@@ -1,4 +1,5 @@
 import type { WSClient, WsFrame, BaseMessage, TextMessage, ImageMessage, FileMessage, VoiceMessage } from '@wecom/aibot-node-sdk'
+import { log } from './logger.js'
 
 export interface ProcessedWsMessage {
   chatId: string
@@ -100,7 +101,7 @@ export class MessageProcessor {
       const { buffer } = await this.ws.downloadFile(imgBody.image.url, imgBody.image.aeskey)
       return buffer
     } catch (error) {
-      console.error('[Processor] Download image failed:', error)
+      log.error('[Processor] Download image failed:', error)
       return undefined
     }
   }
@@ -113,7 +114,7 @@ export class MessageProcessor {
       const result = await this.ws.downloadFile(fileBody.file.url, fileBody.file.aeskey)
       return { buffer: result.buffer, fileName: result.filename }
     } catch (error) {
-      console.error('[Processor] Download file failed:', error)
+      log.error('[Processor] Download file failed:', error)
       return { buffer: Buffer.alloc(0) }
     }
   }

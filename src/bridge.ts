@@ -5,6 +5,7 @@ import { SessionManager } from './session-manager.js'
 import { MessageProcessor } from './message-processor.js'
 import { ResponseSender } from './response-sender.js'
 import { parseCommand, getHelpText } from './command-parser.js'
+import { log, createFilteredLogger } from './logger.js'
 
 export class Bridge {
   private config: BridgeConfig
@@ -21,6 +22,7 @@ export class Bridge {
     this.ws = new AiBot.WSClient({
       botId: config.wecom.botId,
       secret: config.wecom.secret,
+      logger: createFilteredLogger(),
     })
     this.claude = new ClaudeClient(config.project, config.claude)
     this.sessions = new SessionManager(config.wecom)
@@ -34,10 +36,10 @@ export class Bridge {
 
     this.ws.connect()
 
-    console.log('[Bridge] Service started (WebSocket mode)')
-    console.log(`[Bridge] Project: ${this.config.project.cwd}`)
-    console.log(`[Bridge] Model: ${this.config.project.model}`)
-    console.log(`[Bridge] Bot ID: ${this.config.wecom.botId}`)
+    log.info('[Bridge] Service started (WebSocket mode)')
+    log.info(`[Bridge] Project: ${this.config.project.cwd}`)
+    log.info(`[Bridge] Model: ${this.config.project.model}`)
+    log.info(`[Bridge] Bot ID: ${this.config.wecom.botId}`)
   }
 
   async stop(): Promise<void> {
@@ -47,35 +49,35 @@ export class Bridge {
     }
     this.abortControllers.clear()
     await this.sessions.destroy()
-    console.log('[Bridge] Service stopped')
+    log.info('[Bridge] Service stopped')
   }
 
   private setupEventHandlers(): void {
     this.ws.on('authenticated', () => {
-      console.log('[Bridge] WebSocket authenticated')
+      log.info('[Bridge] WebSocket authenticated')
     })
 
     this.ws.on('connected', () => {
-      console.log('[Bridge] WebSocket connected')
+      log.info('[Bridge] WebSocket connected')
     })
 
     this.ws.on('disconnected', (reason) => {
-      console.log(`[Bridge] WebSocket disconnected: ${reason}`)
+      log.info(`[Bridge] WebSocket disconnected: ${reason}`)
     })
 
     this.ws.on('reconnecting', (attempt) => {
-      console.log(`[Bridge] WebSocket reconnecting... attempt ${attempt}`)
+      log.info(`[Bridge] WebSocket reconnecting... attempt ${attempt}`)
     })
 
     this.ws.on('error', (error) => {
-      console.error(`[Bridge] WebSocket error: ${error.message}`)
+      log.error(`[Bridge] WebSocket error: ${error.message}`)
     })
 
     // Handle text messages
     this.ws.on('message.text', (frame) => {
       this.handleMessage(frame).catch((error) => {
         const msg = error instanceof Error ? error.message : String(error)
-        console.error(`[Bridge] Handle text message error: ${msg}`)
+        log.error(`[Bridge] Handle text message error: ${msg}`)
       })
     })
 
@@ -83,7 +85,7 @@ export class Bridge {
     this.ws.on('message.image', (frame) => {
       this.handleMessage(frame).catch((error) => {
         const msg = error instanceof Error ? error.message : String(error)
-        console.error(`[Bridge] Handle image message error: ${msg}`)
+        log.error(`[Bridge] Handle image message error: ${msg}`)
       })
     })
 
@@ -91,7 +93,7 @@ export class Bridge {
     this.ws.on('message.file', (frame) => {
       this.handleMessage(frame).catch((error) => {
         const msg = error instanceof Error ? error.message : String(error)
-        console.error(`[Bridge] Handle file message error: ${msg}`)
+        log.error(`[Bridge] Handle file message error: ${msg}`)
       })
     })
 
@@ -99,7 +101,7 @@ export class Bridge {
     this.ws.on('message.voice', (frame) => {
       this.handleMessage(frame).catch((error) => {
         const msg = error instanceof Error ? error.message : String(error)
-        console.error(`[Bridge] Handle voice message error: ${msg}`)
+        log.error(`[Bridge] Handle voice message error: ${msg}`)
       })
     })
 
@@ -109,7 +111,7 @@ export class Bridge {
         msgtype: 'text',
         text: { content: '你好！我是 Claude Code 助手，发送消息即可开始对话。\n\n发送 /help 查看可用命令。' },
       }).catch((error) => {
-        console.error('[Bridge] Send welcome error:', error)
+        log.error('[Bridge] Send welcome error:', error)
       })
     })
   }
@@ -120,7 +122,7 @@ export class Bridge {
     const userId = body.from.userid
 
     // Log incoming message
-    console.info(`[INFO] 收到消息 (${userId}, ${body.chattype}): [${body.msgtype}] ${this.extractMessageSummary(body)}`)
+    log.info(`收到消息 (${userId}, ${body.chattype}): [${body.msgtype}] ${this.extractMessageSummary(body)}`)
 
     if (body.msgtype === 'text') {
       const textBody = body as unknown as TextMessage
@@ -174,7 +176,7 @@ export class Bridge {
         {
           onText: (text) => sender.append(text),
           onToolUse: (toolName) => {
-            console.log(`[Bridge] Tool use: ${toolName}`)
+            log.info(`[Bridge] Tool use: ${toolName}`)
           },
         },
         abortController.signal,
@@ -216,7 +218,7 @@ export class Bridge {
       })
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error)
-      console.error(`[Bridge] Handle error: ${msg}`)
+      log.error(`[Bridge] Handle error: ${msg}`)
       await sender.sendError(msg)
     } finally {
       this.processingChats.delete(chatId)

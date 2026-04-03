@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { execSync } from 'node:child_process'
+import { log } from './logger.js'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const LOCK_FILE = join(__dirname, '..', 'data', 'bridge.lock')
@@ -32,7 +33,7 @@ export async function acquireLock(): Promise<void> {
     const pid = parseInt(content.trim(), 10)
 
     if (!isNaN(pid) && isProcessRunning(pid)) {
-      console.error(`[Bridge] Already running (PID ${pid}). Stop it first or delete ${LOCK_FILE}`)
+      log.error(`[Bridge] Already running (PID ${pid}). Stop it first or delete ${LOCK_FILE}`)
       process.exit(1)
     }
 
