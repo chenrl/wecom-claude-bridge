@@ -14,6 +14,7 @@
     "maxBudgetUsd": 5.0
   },
   "bridge": {
-    "showStats": false
+    "showStats": false,
+    "logLevel": "info"
   }
 }
